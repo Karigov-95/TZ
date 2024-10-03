@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  postgers:
+    image: uselagoon/postgres-16
+    ports:
+      - '5437:5437'
+    container_name: postgres
+    environment:
+      - 'POSTGRES_USER=root'
+      - 'POSTGRES_PASSWORD=root'
+      - 'POSTGRES_DB=postgres'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  user-management:
+    build: .
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./application.properties:/app/application.properties
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgers:5437/postgres
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - postgers
+  user-management-gateway:
+    build: .
+    ports:
+      - '8081:8081'
+    depends_on:
+      - user-management
+    environment:
+      - SPRING_CLOUD_GATEWAY_DEFAULT_URIS=http://eureka-client:8082
